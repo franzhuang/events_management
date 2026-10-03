@@ -1,0 +1,13 @@
+# 排除測試與暫存檔案
+*.png
+*.log
+.DS_Store
+test_*.js
+
+# 排除開發建置過渡檔（資料已內嵌至 index.html）
+build_clean.py
+template.html
+calendar_db.json
+
+# 排除本機實際案件資料（保護個人隱私，不公開上傳至 GitHub）
+霸凌申訴案件.json
