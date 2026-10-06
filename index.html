@@ -356,7 +356,7 @@
     /* Home View (Cases Grid) */
     .home-hero {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
       margin-bottom: 1.25rem;
       flex-wrap: wrap;
@@ -1690,13 +1690,167 @@
       line-height: 1.4;
     }
 
+    /* =========================================================================
+       TIMELINE MAP VIEW (時間地圖專屬樣式)
+       ========================================================================= */
+    .btn-timeline-map {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: white;
+      color: var(--primary);
+      border: 1.5px solid var(--primary-border);
+      padding: 0.55rem 1.15rem;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.92rem;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      user-select: none;
+    }
+
+    .btn-timeline-map:hover {
+      background: var(--primary-light);
+      border-color: var(--primary);
+      box-shadow: var(--shadow);
+      transform: translateY(-1px);
+    }
+
+    .timeline-map-card {
+      background: var(--card-bg);
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .timeline-map-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--slate-200);
+      flex-wrap: wrap;
+    }
+
+    .map-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .map-icon {
+      font-size: 1.45rem;
+    }
+
+    .map-title {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.01em;
+    }
+
+    .map-count-badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--primary-light);
+      color: var(--primary);
+      border: 1px solid var(--primary-border);
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 0.15rem 0.65rem;
+      border-radius: 9999px;
+    }
+
+    .map-desc {
+      font-size: 0.86rem;
+      color: var(--slate-500);
+      line-height: 1.5;
+    }
+
+    .timeline-map-legend {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      background: var(--slate-50);
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--slate-200);
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: var(--slate-700);
+      font-weight: 600;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .timeline-map-scroll-area {
+      overflow-x: auto;
+      overflow-y: hidden;
+      border: 1px solid var(--slate-200);
+      border-radius: var(--radius-sm);
+      background: white;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+    }
+
+    .timeline-map-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      user-select: none;
+    }
+
+    .map-row-highlight {
+      transition: fill 0.15s ease;
+      cursor: pointer;
+    }
+
+    .map-row-highlight:hover {
+      fill: #f1f5f9;
+    }
+
+    .map-case-label {
+      cursor: pointer;
+      transition: fill 0.15s ease;
+    }
+
+    .map-case-label:hover {
+      fill: var(--primary);
+    }
+
+    .map-node-group {
+      cursor: pointer;
+    }
+
+    .map-node-group:hover circle.node-core {
+      filter: brightness(1.15) drop-shadow(0 2px 5px rgba(0,0,0,0.25));
+    }
+
     /* Print */
     @media print {
       header, .controls-panel, .detail-nav, .filter-bar, .home-hero button, .btn {
         display: none !important;
       }
       body { background: white; color: black; }
-      .arrow-timeline-hero { box-shadow: none; border: 1px solid #ccc; }
+      .arrow-timeline-hero, .timeline-map-card { box-shadow: none; border: 1px solid #ccc; }
+      .timeline-map-scroll-area { overflow: visible !important; border: none !important; }
     }
   </style>
 </head>
@@ -1728,9 +1882,17 @@
     <!-- VIEW 1: CASE LIST (首頁：各案件名稱清單) -->
     <div id="view-home" class="view-container active">
       <div class="home-hero">
-        <button class="btn btn-primary" onclick="openNewCaseModal()">
-          <span>＋</span> 新增霸凌申訴案
-        </button>
+        <div class="home-hero-left">
+          <button type="button" class="btn btn-timeline-map" onclick="navigateTo('timeline-map')" title="查看所有未完成案件時間線圖">
+            <span style="font-size: 1.15rem;">🗺️</span>
+            <span>時間地圖</span>
+          </button>
+        </div>
+        <div class="home-hero-right">
+          <button class="btn btn-primary" onclick="openNewCaseModal()">
+            <span>＋</span> 新增霸凌申訴案
+          </button>
+        </div>
       </div>
 
 
@@ -1848,6 +2010,56 @@
         </div>
       </section>
 
+    </div>
+
+    <!-- VIEW 3: MULTI-CASE TIMELINE MAP (時間地圖：所有未完成案件時限線圖) -->
+    <div id="view-timeline-map" class="view-container">
+      <div class="detail-nav" style="margin-bottom: 1rem;">
+        <a class="back-btn" onclick="navigateTo('home')">
+          <span class="back-arrow">←</span>
+          <span>返回各案件清單</span>
+        </a>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+          <button class="btn btn-outline btn-sm" onclick="window.print()">
+            <span>🖨️</span> 列印 / 另存 PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- 地圖面板本體 -->
+      <div class="timeline-map-card">
+        <div class="timeline-map-header-row">
+          <div class="map-title-block">
+            <div class="map-title-row">
+              <span class="map-icon">🗺️</span>
+              <h2 class="map-title">案件時限時間地圖</h2>
+              <span id="timelineMapCountBadge" class="map-count-badge">進行中 0 案</span>
+            </div>
+            <p class="map-desc">展示所有未完成（進行中）案件之三個法定重要時限節點。依時間由早至晚排序，點擊案件名稱或節點可直接查看詳細時間軸。</p>
+          </div>
+
+          <!-- 圖例 Legend -->
+          <div class="timeline-map-legend">
+            <div class="legend-chip">
+              <span class="legend-dot" style="background: #2563eb;"></span>
+              <span class="legend-text">通報系統（受理後 7 日）</span>
+            </div>
+            <div class="legend-chip">
+              <span class="legend-dot" style="background: #059669;"></span>
+              <span class="legend-text">成立調查小組（受理後 15 日）</span>
+            </div>
+            <div class="legend-chip">
+              <span class="legend-dot" style="background: #dc2626; box-shadow: 0 0 0 2px rgba(220,38,38,0.25);"></span>
+              <span class="legend-text" style="color: #b91c1c; font-weight: 700;">完成調查報告（法定 2 個月）</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 線圖渲染容器 (可橫向捲動，保持節點與文字舒適間距) -->
+        <div id="timelineMapScrollContainer" class="timeline-map-scroll-area">
+          <div id="timelineMapGraphWrap"></div>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -2648,8 +2860,330 @@
       }
       if (viewName === 'home') {
         renderCaseCards();
+      } else if (viewName === 'timeline-map') {
+        renderTimelineMap();
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // =========================================================================
+    // MULTI-CASE TIMELINE MAP: RENDERING & SVG GRAPH
+    // (時間地圖：所有未完成案件時限線圖 ‧ 時間X軸 ‧ 案件名稱Y軸)
+    // =========================================================================
+    function escapeXml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;');
+    }
+
+    function addDaysToDateStr(dStr, days) {
+      const dt = new Date(`${dStr}T00:00:00`);
+      dt.setDate(dt.getDate() + days);
+      const y = dt.getFullYear();
+      const m = String(dt.getMonth() + 1).padStart(2, '0');
+      const d = String(dt.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function getDaysDiff(d1Str, d2Str) {
+      const ms1 = new Date(`${d1Str}T00:00:00`).getTime();
+      const ms2 = new Date(`${d2Str}T00:00:00`).getTime();
+      return Math.round((ms2 - ms1) / (1000 * 60 * 60 * 24));
+    }
+
+    function renderTimelineMap() {
+      const container = document.getElementById('timelineMapGraphWrap');
+      const badge = document.getElementById('timelineMapCountBadge');
+      if (!container) return;
+
+      // 1. 篩選未完成案件 (非已結案且非不予受理)
+      const unclosedCases = cases.filter(c => c.status !== 'closed' && c.status !== 'rejected');
+
+      const validCases = [];
+      const casesWithoutDate = [];
+      for (const c of unclosedCases) {
+        const ms = calculateCaseMilestones(c);
+        if (ms && ms.step2 && ms.step3 && ms.step4) {
+          validCases.push({
+            id: c.id,
+            name: c.name,
+            status: c.status,
+            complaintDate: c.complaintDate,
+            acceptedDate: c.acceptedDate,
+            milestones: ms,
+            t1: ms.step2.endDate,         // 1. 通報系統 (受理後 7 個工作日)
+            t2: ms.step3.endDate,         // 2. 成立調查小組 (受理後 15 個工作日)
+            t3: ms.step4.effectiveDate    // 3. 完成調查報告 (成立調查小組起 2 個月法定截止)
+          });
+        } else {
+          casesWithoutDate.push(c);
+        }
+      }
+
+      if (badge) {
+        badge.innerText = `進行中 ${validCases.length} 案`;
+      }
+
+      // 2. 排序：時間早的案件排前面 (升冪排序，一條線一條線排下來)
+      validCases.sort((a, b) => {
+        // 第一個時限點（通報系統時間）優先比對
+        if (a.t1 !== b.t1) return a.t1.localeCompare(b.t1);
+        // 若相同則比對接獲申訴日
+        const cA = a.complaintDate || '';
+        const cB = b.complaintDate || '';
+        if (cA !== cB) return cA.localeCompare(cB);
+        // 再相同比對報告截止日
+        return a.t3.localeCompare(b.t3);
+      });
+
+      // 3. 空狀態處理
+      if (validCases.length === 0) {
+        if (casesWithoutDate.length > 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 4.5rem 1.5rem;">
+              <div style="font-size: 3rem; margin-bottom: 0.75rem;">📅</div>
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">目前進行中案件尚未輸入「接獲申訴日」</h3>
+              <p style="color: var(--slate-500); font-size: 0.92rem; max-width: 520px; margin: 0 auto 1.5rem; line-height: 1.6;">
+                共有 ${casesWithoutDate.length} 件進行中案件尚未填寫接獲申訴日起算日。請點擊案件設定申訴日後，系統將自動推算 3 個關鍵時限並繪製線圖。
+              </p>
+              <button class="btn btn-primary" onclick="openCaseDetail('${casesWithoutDate[0].id}')">
+                進入【${escapeXml(casesWithoutDate[0].name)}】設定申訴日
+              </button>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 5rem 1.5rem;">
+              <div style="font-size: 3.2rem; margin-bottom: 0.75rem;">🎉</div>
+              <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem;">目前無進行中之未完成案件</h3>
+              <p style="color: var(--slate-500); font-size: 0.92rem; max-width: 480px; margin: 0 auto 1.5rem; line-height: 1.6;">
+                所有案件皆已結案或不予受理。若有新接獲之職場霸凌申訴事件，請點選下方按鈕立案。
+              </p>
+              <button class="btn btn-primary" onclick="openNewCaseModal()">
+                <span>＋</span> 新增霸凌申訴案
+              </button>
+            </div>
+          `;
+        }
+        return;
+      }
+
+      // 4. 計算 X 軸全局日期跨度 (Min / Max Date)
+      const allDates = [];
+      validCases.forEach(item => {
+        allDates.push(item.t1, item.t2, item.t3);
+      });
+      const todayStr = getTodayDateStr();
+      allDates.push(todayStr);
+      allDates.sort();
+
+      const globalMinStr = allDates[0];
+      const globalMaxStr = allDates[allDates.length - 1];
+
+      // 緩衝期：起點往前 4 天，終點往後 7 天
+      let chartStart = addDaysToDateStr(globalMinStr, -4);
+      let chartEnd = addDaysToDateStr(globalMaxStr, 7);
+      let totalDays = getDaysDiff(chartStart, chartEnd);
+      if (totalDays < 20) {
+        chartEnd = addDaysToDateStr(chartStart, 20);
+        totalDays = 20;
+      }
+
+      // 5. 尺寸與佈局參數
+      const labelColWidth = 240; // 左側 Y 軸案件名稱欄位寬度
+      // 根據天數計算像素寬度（每天至少 16px，最多 34px，保證舒適可視）
+      const pixelsPerDay = Math.max(16, Math.min(34, 960 / totalDays));
+      const chartAreaWidth = Math.max(760, totalDays * pixelsPerDay);
+      const rightPadding = 75;
+      const totalSvgWidth = labelColWidth + chartAreaWidth + rightPadding;
+
+      const headerHeight = 65; // 頂部時間標尺高度
+      const rowHeight = 72;    // 每個案件行高
+      const totalSvgHeight = headerHeight + validCases.length * rowHeight + 25;
+
+      // 日期轉換至 X 軸座標
+      function dateToX(dStr) {
+        const diff = getDaysDiff(chartStart, dStr);
+        return labelColWidth + (diff / totalDays) * chartAreaWidth;
+      }
+
+      // 6. 產生 X 軸時間刻度 (依總天數動態選擇步長)
+      let tickStep = 7; // 預設每週一個刻度
+      if (totalDays <= 14) tickStep = 2;
+      else if (totalDays <= 35) tickStep = 5;
+      else if (totalDays <= 70) tickStep = 7;
+      else if (totalDays <= 120) tickStep = 10;
+      else tickStep = 14;
+
+      let gridLinesHtml = '';
+      let ticksHtml = '';
+
+      // 背景頂部標尺底色
+      ticksHtml += `
+        <rect x="0" y="0" width="${totalSvgWidth}" height="${headerHeight}" fill="#f8fafc" />
+        <line x1="0" y1="${headerHeight}" x2="${totalSvgWidth}" y2="${headerHeight}" stroke="#cbd5e1" stroke-width="1.5" />
+        <line x1="${labelColWidth}" y1="0" x2="${labelColWidth}" y2="${totalSvgHeight}" stroke="#cbd5e1" stroke-width="1.5" />
+        <text x="20" y="38" font-size="13" font-weight="800" fill="#475569">案件名稱（Y 軸）</text>
+        <text x="${labelColWidth + 15}" y="24" font-size="11" font-weight="700" fill="#64748b">時間軸刻度（X 軸）</text>
+      `;
+
+      let curDay = 0;
+      while (curDay <= totalDays) {
+        const curDateStr = addDaysToDateStr(chartStart, curDay);
+        const xPos = dateToX(curDateStr);
+        const dDisp = formatDateDisplay(curDateStr);
+
+        // 垂直格線
+        gridLinesHtml += `
+          <line x1="${xPos}" y1="${headerHeight}" x2="${xPos}" y2="${totalSvgHeight - 15}" stroke="#f1f5f9" stroke-width="1" />
+        `;
+
+        // 頂部刻度文字
+        ticksHtml += `
+          <line x1="${xPos}" y1="${headerHeight - 6}" x2="${xPos}" y2="${headerHeight}" stroke="#94a3b8" stroke-width="1.5" />
+          <text x="${xPos}" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">${dDisp.rocShort}</text>
+          <text x="${xPos}" y="52" text-anchor="middle" font-size="10" fill="#64748b">${dDisp.dayName}</text>
+        `;
+
+        curDay += tickStep;
+      }
+
+      // 今日標記線 (Today Line)
+      let todayLineHtml = '';
+      if (todayStr >= chartStart && todayStr <= chartEnd) {
+        const todayX = dateToX(todayStr);
+        const todayDisp = formatDateDisplay(todayStr);
+        todayLineHtml = `
+          <g>
+            <line x1="${todayX}" y1="${headerHeight - 16}" x2="${todayX}" y2="${totalSvgHeight - 15}" stroke="#f59e0b" stroke-width="2" stroke-dasharray="4,4" />
+            <rect x="${todayX - 32}" y="6" width="64" height="22" rx="11" fill="#fef3c7" stroke="#f59e0b" stroke-width="1.2" />
+            <text x="${todayX}" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="#b45309">今日</text>
+            <title>目前系統日期：${todayDisp.roc} (${todayDisp.dayName})</title>
+          </g>
+        `;
+      }
+
+      // 7. 產生各案件行（Y 軸、橫向線條、三個節點）
+      let rowsHtml = '';
+      validCases.forEach((item, index) => {
+        const rowTop = headerHeight + index * rowHeight;
+        const centerY = rowTop + rowHeight / 2;
+        const isEven = (index % 2 === 0);
+        const rowBg = isEven ? '#ffffff' : '#f8fafc';
+
+        // 狀態文字與顏色
+        let statusText = '審查中';
+        let statusBadgeFill = '#fef3c7';
+        let statusBadgeColor = '#b45309';
+        if (item.status === 'accepted') {
+          statusText = '已受理';
+          statusBadgeFill = '#dcfce7';
+          statusBadgeColor = '#15803d';
+        }
+
+        const compRoc = formatDateDisplay(item.complaintDate).rocShort || '';
+        const x1 = dateToX(item.t1);
+        const x2 = dateToX(item.t2);
+        const x3 = dateToX(item.t3);
+
+        const d1Disp = formatDateDisplay(item.t1);
+        const d2Disp = formatDateDisplay(item.t2);
+        const d3Disp = formatDateDisplay(item.t3);
+
+        // 截斷過長名稱
+        const displayName = item.name.length > 14 ? (item.name.slice(0, 13) + '…') : item.name;
+
+        rowsHtml += `
+          <!-- Row ${index + 1}: ${escapeXml(item.name)} -->
+          <g class="map-row-group">
+            <!-- Row Background Highlight -->
+            <rect x="0" y="${rowTop}" width="${totalSvgWidth}" height="${rowHeight}" fill="${rowBg}" class="map-row-highlight" onclick="openCaseDetail('${item.id}')">
+              <title>點擊開啟【${escapeXml(item.name)}】詳細時限時間軸</title>
+            </rect>
+            <line x1="0" y1="${rowTop + rowHeight}" x2="${totalSvgWidth}" y2="${rowTop + rowHeight}" stroke="#e2e8f0" stroke-width="1" />
+
+            <!-- Y-Axis: Case Info -->
+            <g class="map-case-label" onclick="openCaseDetail('${item.id}')">
+              <title>點擊開啟【${escapeXml(item.name)}】詳細時限時間軸</title>
+              <text x="18" y="${centerY - 8}" font-size="13.5" font-weight="800" fill="#0f172a">${escapeXml(displayName)}</text>
+              
+              <!-- 狀態小徽章背景與文字 -->
+              <rect x="18" y="${centerY + 4}" width="46" height="18" rx="9" fill="${statusBadgeFill}" />
+              <text x="41" y="${centerY + 16.5}" font-size="10" font-weight="700" fill="${statusBadgeColor}" text-anchor="middle">${statusText}</text>
+              
+              <!-- 申訴日 -->
+              <text x="70" y="${centerY + 17}" font-size="11" fill="#64748b">申訴:${compRoc}</text>
+            </g>
+
+            <!-- Case Track Line (橫向線：從通報系統連到完成調查報告) -->
+            <line x1="${x1}" y1="${centerY}" x2="${x3}" y2="${centerY}" stroke="#cbd5e1" stroke-width="4.5" stroke-linecap="round" />
+            <line x1="${x1}" y1="${centerY}" x2="${x2}" y2="${centerY}" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+            <line x1="${x2}" y1="${centerY}" x2="${x3}" y2="${centerY}" stroke="#10b981" stroke-width="3" stroke-linecap="round" opacity="0.85" />
+
+            <!-- 節點 1: 通報系統 (藍色點) -->
+            <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
+              <title>【${escapeXml(item.name)}】通報系統時限：${d1Disp.roc} (${d1Disp.fullDayName}) ｜ 法定受理後 7 個工作日</title>
+              <!-- 標籤文字 (放置於點上方 centerY - 17) -->
+              <text x="${x1}" y="${centerY - 17}" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">通報系統</text>
+              <text x="${x1}" y="${centerY - 5}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${d1Disp.rocShort}</text>
+              <!-- 圓點 -->
+              <circle cx="${x1}" cy="${centerY}" r="7" fill="#2563eb" stroke="#ffffff" stroke-width="2.5" class="node-core" />
+            </g>
+
+            <!-- 節點 2: 成立調查小組 (綠色點) -->
+            <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
+              <title>【${escapeXml(item.name)}】成立調查小組時限：${d2Disp.roc} (${d2Disp.fullDayName}) ｜ 法定受理後 15 個工作日</title>
+              <!-- 標籤文字 (錯位放置於點下方 centerY + 18，避免與相近日期重疊) -->
+              <circle cx="${x2}" cy="${centerY}" r="7" fill="#059669" stroke="#ffffff" stroke-width="2.5" class="node-core" />
+              <text x="${x2}" y="${centerY + 18}" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">成立調查小組</text>
+              <text x="${x2}" y="${centerY + 30}" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">${d2Disp.rocShort}</text>
+            </g>
+
+            <!-- 節點 3: 完成調查報告 (紅色點 - 使用者特別規定) -->
+            <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
+              <title>【${escapeXml(item.name)}】完成調查報告截止：${d3Disp.roc} (${d3Disp.fullDayName}) ｜ 法定成立調查小組起 2 個月日曆天</title>
+              <!-- 標籤文字 (放置於點上方 centerY - 17) -->
+              <text x="${x3}" y="${centerY - 17}" text-anchor="middle" font-size="11" font-weight="800" fill="#b91c1c">完成調查報告</text>
+              <text x="${x3}" y="${centerY - 5}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#dc2626">${d3Disp.rocShort}</text>
+              <!-- 外層醒目光暈 -->
+              <circle cx="${x3}" cy="${centerY}" r="12" fill="rgba(220, 38, 38, 0.16)" />
+              <!-- 紅色核心圓點 -->
+              <circle cx="${x3}" cy="${centerY}" r="8.5" fill="#dc2626" stroke="#ffffff" stroke-width="2.5" class="node-core" />
+            </g>
+
+          </g>
+        `;
+      });
+
+      // 8. 組裝完整 SVG
+      const svgContent = `
+        <svg class="timeline-map-svg" viewBox="0 0 ${totalSvgWidth} ${totalSvgHeight}" width="${totalSvgWidth}" height="${totalSvgHeight}" xmlns="http://www.w3.org/2000/svg">
+          <!-- 垂直格線 -->
+          ${gridLinesHtml}
+          <!-- 頂部時間標尺 -->
+          ${ticksHtml}
+          <!-- 各案件行與節點 -->
+          ${rowsHtml}
+          <!-- 今日垂直指示線 -->
+          ${todayLineHtml}
+        </svg>
+      `;
+
+      container.innerHTML = svgContent;
+
+      // 自動讓捲軸平滑捲動到適中位置 (例如今日或第一個時限點)
+      if (todayStr >= chartStart && todayStr <= chartEnd) {
+        const todayX = dateToX(todayStr);
+        const scrollContainer = document.getElementById('timelineMapScrollContainer');
+        if (scrollContainer) {
+          const targetScroll = Math.max(0, todayX - (scrollContainer.clientWidth / 2));
+          scrollContainer.scrollLeft = targetScroll;
+        }
+      }
     }
 
     // =========================================================================
