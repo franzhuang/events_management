@@ -138,32 +138,25 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
 
-    @keyframes blinkRedDot {
-      0%, 100% {
-        opacity: 1;
-        transform: scale(1.15);
-      }
-      50% {
-        opacity: 0.15;
-        transform: scale(0.75);
-      }
+    /* 最常見標準連線狀態小圓點 (Online Green / Warning Yellow) */
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 0.3rem;
+      vertical-align: middle;
+      flex-shrink: 0;
     }
 
-    .blink-dot {
-      display: inline-block;
-      color: #ef4444;
-      font-size: 0.85rem;
-      line-height: 1;
-      margin-right: 0.25rem;
-      animation: blinkRedDot 1.1s infinite ease-in-out;
-      vertical-align: middle;
+    .status-dot.green {
+      background: #10b981;
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
     }
 
-    .prompt-dot {
-      display: inline-block;
-      font-size: 0.8rem;
-      margin-right: 0.25rem;
-      vertical-align: middle;
+    .status-dot.yellow {
+      background: #f59e0b;
+      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
     }
 
     .btn-header-save {
@@ -190,21 +183,29 @@
       box-shadow: 0 1px 5px rgba(37, 99, 235, 0.28);
     }
 
+    /* 已連結狀態：大眾最熟知的標準連線綠 */
     .storage-status-pill.linked {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #991b1b;
+      background: #ecfdf5;
+      border-color: #a7f3d0;
+      color: #065f46;
     }
 
     .storage-status-pill.linked:hover {
-      background: #fee2e2;
-      border-color: #f87171;
+      background: #d1fae5;
+      border-color: #34d399;
+      box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);
     }
 
+    /* 待確認授權狀態：標準溫暖提醒黃 */
     .storage-status-pill.prompt {
       background: #fffbeb;
       border-color: #fde68a;
       color: #b45309;
+    }
+
+    .storage-status-pill.prompt:hover {
+      background: #fef3c7;
+      border-color: #f59e0b;
     }
 
     .storage-time {
@@ -355,24 +356,11 @@
     /* Home View (Cases Grid) */
     .home-hero {
       display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      margin-bottom: 1.75rem;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 1.25rem;
       flex-wrap: wrap;
       gap: 1rem;
-    }
-
-    .home-title h2 {
-      font-size: 1.75rem;
-      font-weight: 800;
-      color: var(--slate-900);
-      letter-spacing: -0.02em;
-    }
-
-    .home-title p {
-      color: var(--slate-600);
-      font-size: 0.95rem;
-      margin-top: 0.25rem;
     }
 
     .filter-bar {
@@ -1600,14 +1588,9 @@
     <!-- VIEW 1: CASE LIST (首頁：各案件名稱清單) -->
     <div id="view-home" class="view-container active">
       <div class="home-hero">
-        <div class="home-title">
-          <h2>職場霸凌案件時限管理</h2>
-        </div>
-        <div style="display: flex; gap: 0.75rem;">
-          <button class="btn btn-primary" onclick="openNewCaseModal()">
-            <span>＋</span> 新增霸凌申訴案
-          </button>
-        </div>
+        <button class="btn btn-primary" onclick="openNewCaseModal()">
+          <span>＋</span> 新增霸凌申訴案
+        </button>
       </div>
 
 
@@ -2165,12 +2148,12 @@
 
       if (state === 'linked') {
         btn.className = 'storage-status-pill linked';
-        btn.title = `已連結「${filename}」，修改資料時將自動儲存！點選可更換檔案。`;
-        textEl.innerHTML = `<span class="blink-dot">●</span>連結紀錄檔`;
+        btn.title = `已連結紀錄檔（${filename}），修改資料時將自動即時儲存！點選可更換檔案。`;
+        textEl.innerHTML = `<span class="status-dot green"></span>已連結紀錄檔`;
       } else if (state === 'prompt') {
         btn.className = 'storage-status-pill prompt';
-        btn.title = `已記住「${filename}」，點選此處一鍵授權即可恢復同步！`;
-        textEl.innerHTML = `<span class="prompt-dot">🟡</span>連結紀錄檔`;
+        btn.title = `已記住「${filename}」，點選此處確認授權即可恢復連線！`;
+        textEl.innerHTML = `<span class="status-dot yellow"></span>已連結紀錄檔`;
       } else {
         btn.className = 'storage-status-pill';
         btn.title = `點選連結硬碟中的現有案件紀錄檔`;
