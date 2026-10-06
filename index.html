@@ -1822,17 +1822,117 @@
       cursor: pointer;
     }
 
-    .map-row-highlight:hover {
+    .map-row-group:hover .map-row-highlight {
       fill: #f1f5f9;
     }
 
-    .map-case-label {
-      cursor: pointer;
-      transition: fill 0.15s ease;
+    .map-row-left-bar {
+      fill: transparent;
+      transition: fill 0.18s ease;
     }
 
-    .map-case-label:hover {
+    .map-row-group:hover .map-row-left-bar {
       fill: var(--primary);
+    }
+
+    /* Y 軸（案件名稱與狀態）懸停顯著變大效果 */
+    .map-case-label {
+      cursor: pointer;
+    }
+
+    .map-y-case-name {
+      font-size: 13.5px;
+      font-weight: 800;
+      fill: #0f172a;
+      transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1), fill 0.18s ease, font-weight 0.18s ease;
+      paint-order: stroke fill;
+      stroke: #ffffff;
+      stroke-width: 0px;
+      stroke-linejoin: round;
+    }
+
+    .map-y-case-meta {
+      font-size: 11px;
+      fill: #64748b;
+      transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1), fill 0.18s ease;
+    }
+
+    /* 當滑鼠移至整行或案件名稱時，Y軸字體放大至 18px，申訴日放大至 12.5px */
+    .map-row-group:hover .map-y-case-name,
+    .map-case-label:hover .map-y-case-name {
+      font-size: 18px;
+      font-weight: 900;
+      fill: #1d4ed8;
+      stroke-width: 6px; /* 白色描邊，避免字體放大時被背景線條干擾 */
+      filter: drop-shadow(0 2px 5px rgba(37, 99, 235, 0.2));
+    }
+
+    .map-row-group:hover .map-y-case-meta,
+    .map-case-label:hover .map-y-case-meta {
+      font-size: 12.5px;
+      font-weight: 700;
+      fill: #334155;
+    }
+
+    /* X 軸（時間刻度）懸停顯著變大效果 */
+    .map-x-tick {
+      cursor: pointer;
+    }
+
+    .tick-hover-pill {
+      fill: transparent;
+      stroke: transparent;
+      stroke-width: 1.5;
+      transition: fill 0.18s ease, stroke 0.18s ease, filter 0.18s ease;
+    }
+
+    .map-tick-text-main {
+      font-size: 11.5px;
+      font-weight: 700;
+      fill: #334155;
+      transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1), fill 0.18s ease, font-weight 0.18s ease;
+      pointer-events: none;
+    }
+
+    .map-tick-text-sub {
+      font-size: 10px;
+      font-weight: 600;
+      fill: #64748b;
+      transition: font-size 0.18s cubic-bezier(0.4, 0, 0.2, 1), fill 0.18s ease, font-weight 0.18s ease;
+      pointer-events: none;
+    }
+
+    /* 當滑鼠移至 X 軸刻度時，背景顯示高亮膠囊，日期放大至 16.5px，星期放大至 13px */
+    .map-x-tick:hover .tick-hover-pill {
+      fill: #eff6ff;
+      stroke: #3b82f6;
+      filter: drop-shadow(0 3px 6px rgba(37, 99, 235, 0.22));
+    }
+
+    .map-x-tick:hover .map-tick-text-main {
+      font-size: 16.5px;
+      font-weight: 900;
+      fill: #1d4ed8;
+    }
+
+    .map-x-tick:hover .map-tick-text-sub {
+      font-size: 13px;
+      font-weight: 800;
+      fill: #2563eb;
+    }
+
+    .map-x-tick:hover .tick-mark {
+      stroke: #1d4ed8;
+      stroke-width: 2.5;
+    }
+
+    /* 節點時限文字懸停效果 */
+    .map-node-label-title {
+      transition: font-size 0.18s ease, font-weight 0.18s ease;
+    }
+
+    .map-node-label-date {
+      transition: font-size 0.18s ease, font-weight 0.18s ease;
     }
 
     .map-node-group {
@@ -1840,7 +1940,17 @@
     }
 
     .map-node-group:hover circle.node-core {
-      filter: brightness(1.15) drop-shadow(0 2px 5px rgba(0,0,0,0.25));
+      filter: brightness(1.15) drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+    }
+
+    .map-node-group:hover .map-node-label-title {
+      font-size: 13.5px;
+      font-weight: 900;
+    }
+
+    .map-node-group:hover .map-node-label-date {
+      font-size: 12px;
+      font-weight: 900;
     }
 
     /* Print */
@@ -3027,8 +3137,9 @@
         <rect x="0" y="0" width="${totalSvgWidth}" height="${headerHeight}" fill="#f8fafc" />
         <line x1="0" y1="${headerHeight}" x2="${totalSvgWidth}" y2="${headerHeight}" stroke="#cbd5e1" stroke-width="1.5" />
         <line x1="${labelColWidth}" y1="0" x2="${labelColWidth}" y2="${totalSvgHeight}" stroke="#cbd5e1" stroke-width="1.5" />
-        <text x="20" y="38" font-size="13" font-weight="800" fill="#475569">案件名稱（Y 軸）</text>
-        <text x="${labelColWidth + 15}" y="24" font-size="11" font-weight="700" fill="#64748b">時間軸刻度（X 軸）</text>
+        <text x="20" y="30" font-size="13" font-weight="800" fill="#334155">案件名稱（Y 軸）</text>
+        <text x="20" y="47" font-size="10" font-weight="600" fill="#64748b">🔍 懸停放大查看案件</text>
+        <text x="${labelColWidth + 15}" y="20" font-size="11" font-weight="700" fill="#64748b">時間軸刻度（X 軸）‧ 游標懸停放大日期</text>
       `;
 
       let curDay = 0;
@@ -3042,11 +3153,19 @@
           <line x1="${xPos}" y1="${headerHeight}" x2="${xPos}" y2="${totalSvgHeight - 15}" stroke="#f1f5f9" stroke-width="1" />
         `;
 
-        // 頂部刻度文字
+        // 頂部刻度項目 (支援懸停放大效果)
         ticksHtml += `
-          <line x1="${xPos}" y1="${headerHeight - 6}" x2="${xPos}" y2="${headerHeight}" stroke="#94a3b8" stroke-width="1.5" />
-          <text x="${xPos}" y="38" text-anchor="middle" font-size="11.5" font-weight="700" fill="#334155">${dDisp.rocShort}</text>
-          <text x="${xPos}" y="52" text-anchor="middle" font-size="10" fill="#64748b">${dDisp.dayName}</text>
+          <g class="map-x-tick" data-grid-day="${curDay}">
+            <title>${dDisp.roc} (${dDisp.fullDayName}) ｜ 西元 ${dDisp.ad}</title>
+            <!-- 懸停時高亮底色背景膠囊 -->
+            <rect x="${xPos - 36}" y="6" width="72" height="52" rx="8" class="tick-hover-pill" />
+            <!-- 刻度標記線 -->
+            <line x1="${xPos}" y1="${headerHeight - 8}" x2="${xPos}" y2="${headerHeight}" stroke="#94a3b8" stroke-width="1.5" class="tick-mark" />
+            <!-- 日期文字 (民國年/月/日) -->
+            <text x="${xPos}" y="35" text-anchor="middle" class="map-tick-text-main">${dDisp.rocShort}</text>
+            <!-- 星期文字 -->
+            <text x="${xPos}" y="50" text-anchor="middle" class="map-tick-text-sub">${dDisp.dayName}</text>
+          </g>
         `;
 
         curDay += tickStep;
@@ -3104,19 +3223,21 @@
             <rect x="0" y="${rowTop}" width="${totalSvgWidth}" height="${rowHeight}" fill="${rowBg}" class="map-row-highlight" onclick="openCaseDetail('${item.id}')">
               <title>點擊開啟【${escapeXml(item.name)}】詳細時限時間軸</title>
             </rect>
+            <!-- 左側高亮指示條 (hover 時顯現主色藍條) -->
+            <rect x="0" y="${rowTop}" width="4" height="${rowHeight}" class="map-row-left-bar" />
             <line x1="0" y1="${rowTop + rowHeight}" x2="${totalSvgWidth}" y2="${rowTop + rowHeight}" stroke="#e2e8f0" stroke-width="1" />
 
-            <!-- Y-Axis: Case Info -->
+            <!-- Y-Axis: Case Info (支援懸停變大效果) -->
             <g class="map-case-label" onclick="openCaseDetail('${item.id}')">
               <title>點擊開啟【${escapeXml(item.name)}】詳細時限時間軸</title>
-              <text x="18" y="${centerY - 8}" font-size="13.5" font-weight="800" fill="#0f172a">${escapeXml(displayName)}</text>
+              <text x="18" y="${centerY - 8}" class="map-y-case-name">${escapeXml(displayName)}</text>
               
               <!-- 狀態小徽章背景與文字 -->
               <rect x="18" y="${centerY + 4}" width="46" height="18" rx="9" fill="${statusBadgeFill}" />
               <text x="41" y="${centerY + 16.5}" font-size="10" font-weight="700" fill="${statusBadgeColor}" text-anchor="middle">${statusText}</text>
               
               <!-- 申訴日 -->
-              <text x="70" y="${centerY + 17}" font-size="11" fill="#64748b">申訴:${compRoc}</text>
+              <text x="70" y="${centerY + 17}" class="map-y-case-meta">申訴:${compRoc}</text>
             </g>
 
             <!-- Case Track Line (橫向線：從通報系統連到完成調查報告) -->
@@ -3127,9 +3248,9 @@
             <!-- 節點 1: 通報系統 (藍色點) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
               <title>【${escapeXml(item.name)}】通報系統時限：${d1Disp.roc} (${d1Disp.fullDayName}) ｜ 法定受理後 7 個工作日</title>
-              <!-- 標籤文字 (放置於點上方 centerY - 17) -->
-              <text x="${x1}" y="${centerY - 17}" text-anchor="middle" font-size="11" font-weight="700" fill="#1d4ed8">通報系統</text>
-              <text x="${x1}" y="${centerY - 5}" text-anchor="middle" font-size="10" font-weight="700" fill="#2563eb">${d1Disp.rocShort}</text>
+              <!-- 標籤文字 (放置於點上方 centerY - 17，支援懸停放大) -->
+              <text x="${x1}" y="${centerY - 17}" text-anchor="middle" class="map-node-label-title" fill="#1d4ed8">通報系統</text>
+              <text x="${x1}" y="${centerY - 5}" text-anchor="middle" class="map-node-label-date" fill="#2563eb">${d1Disp.rocShort}</text>
               <!-- 圓點 -->
               <circle cx="${x1}" cy="${centerY}" r="7" fill="#2563eb" stroke="#ffffff" stroke-width="2.5" class="node-core" />
             </g>
@@ -3137,18 +3258,18 @@
             <!-- 節點 2: 成立調查小組 (綠色點) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
               <title>【${escapeXml(item.name)}】成立調查小組時限：${d2Disp.roc} (${d2Disp.fullDayName}) ｜ 法定受理後 15 個工作日</title>
-              <!-- 標籤文字 (錯位放置於點下方 centerY + 18，避免與相近日期重疊) -->
+              <!-- 標籤文字 (錯位放置於點下方 centerY + 18，避免與相近日期重疊，支援懸停放大) -->
               <circle cx="${x2}" cy="${centerY}" r="7" fill="#059669" stroke="#ffffff" stroke-width="2.5" class="node-core" />
-              <text x="${x2}" y="${centerY + 18}" text-anchor="middle" font-size="11" font-weight="700" fill="#065f46">成立調查小組</text>
-              <text x="${x2}" y="${centerY + 30}" text-anchor="middle" font-size="10" font-weight="700" fill="#059669">${d2Disp.rocShort}</text>
+              <text x="${x2}" y="${centerY + 18}" text-anchor="middle" class="map-node-label-title" fill="#065f46">成立調查小組</text>
+              <text x="${x2}" y="${centerY + 30}" text-anchor="middle" class="map-node-label-date" fill="#059669">${d2Disp.rocShort}</text>
             </g>
 
             <!-- 節點 3: 完成調查報告 (紅色點 - 使用者特別規定) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
               <title>【${escapeXml(item.name)}】完成調查報告截止：${d3Disp.roc} (${d3Disp.fullDayName}) ｜ 法定成立調查小組起 2 個月日曆天</title>
-              <!-- 標籤文字 (放置於點上方 centerY - 17) -->
-              <text x="${x3}" y="${centerY - 17}" text-anchor="middle" font-size="11" font-weight="800" fill="#b91c1c">完成調查報告</text>
-              <text x="${x3}" y="${centerY - 5}" text-anchor="middle" font-size="10.5" font-weight="800" fill="#dc2626">${d3Disp.rocShort}</text>
+              <!-- 標籤文字 (放置於點上方 centerY - 17，支援懸停放大) -->
+              <text x="${x3}" y="${centerY - 17}" text-anchor="middle" class="map-node-label-title" fill="#b91c1c">完成調查報告</text>
+              <text x="${x3}" y="${centerY - 5}" text-anchor="middle" class="map-node-label-date" fill="#dc2626">${d3Disp.rocShort}</text>
               <!-- 外層醒目光暈 -->
               <circle cx="${x3}" cy="${centerY}" r="12" fill="rgba(220, 38, 38, 0.16)" />
               <!-- 紅色核心圓點 -->
