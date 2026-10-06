@@ -1409,20 +1409,127 @@
     }
 
     .case-status-badge.status-closed {
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #cbd5e1;
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border: 1px solid #cbd5e1 !important;
     }
 
-    #view-detail.case-closed {
-      filter: grayscale(1);
-    }
-
+    /* 1. 首頁已結案卡片 (文字全部轉為比其他灰深一點的深灰色 #475569) */
     .case-card.case-closed {
-      background: #f8fafc;
-      border-color: #cbd5e1;
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+      opacity: 0.92;
+    }
+
+    .case-card.case-closed::before {
+      background: #94a3b8 !important;
+      opacity: 0.6;
+    }
+
+    .case-card.case-closed .case-name {
+      color: #475569 !important; /* 標題不維持黑色，改為深一點的灰色 */
+    }
+
+    .case-card.case-closed .meta-label {
+      color: #64748b !important;
+    }
+
+    .case-card.case-closed .meta-value {
+      color: #475569 !important; /* 深灰色 */
+    }
+
+    .case-card.case-closed .enter-timeline-hint {
+      color: #64748b !important;
+    }
+
+    .case-card.case-closed .enter-timeline-hint span {
+      color: #64748b !important;
+    }
+
+    /* 2. 詳情頁已結案全畫面 (View Detail 所有文字與元件轉為深灰) */
+    #view-detail.case-closed {
+      color: #475569 !important;
       filter: grayscale(1);
-      opacity: 0.88;
+    }
+
+    /* 案件名稱標題 */
+    #view-detail.case-closed .case-title-input {
+      color: #475569 !important; /* 不維持黑色，變為深一點的灰色 */
+      -webkit-text-fill-color: #475569 !important;
+    }
+
+    /* 各欄位文字與標籤 */
+    #view-detail.case-closed .form-label,
+    #view-detail.case-closed .form-label span {
+      color: #475569 !important;
+    }
+
+    #view-detail.case-closed .date-input-wrapper input {
+      color: #475569 !important;
+      -webkit-text-fill-color: #475569 !important;
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    #view-detail.case-closed .date-input-btn {
+      color: #64748b !important;
+      border-color: #cbd5e1 !important;
+      background: #f1f5f9 !important;
+    }
+
+    #view-detail.case-closed .btn-decision-card {
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    #view-detail.case-closed .decision-title {
+      color: #475569 !important;
+    }
+
+    #view-detail.case-closed .controls-panel {
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    #view-detail.case-closed .arrow-timeline-hero {
+      background: #f8fafc !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    #view-detail.case-closed .arrow-hero-title,
+    #view-detail.case-closed .arrow-hero-title span {
+      color: #475569 !important;
+    }
+
+    #view-detail.case-closed .back-btn {
+      color: #64748b !important;
+    }
+
+    #view-detail.case-closed .back-btn:hover {
+      color: #334155 !important;
+    }
+
+    /* 時間軸 SVG 內部所有文字與圖形：字體全數變為深灰色 */
+    #view-detail.case-closed svg text {
+      fill: #475569 !important;
+    }
+
+    #view-detail.case-closed svg line {
+      stroke: #94a3b8 !important;
+    }
+
+    #view-detail.case-closed svg marker path {
+      fill: #64748b !important;
+    }
+
+    #view-detail.case-closed svg circle.milestone-dot {
+      fill: #64748b !important;
+      stroke: #f1f5f9 !important;
+    }
+
+    #view-detail.case-closed svg rect.event-box {
+      fill: #f1f5f9 !important;
+      stroke: #cbd5e1 !important;
     }
 
     .decision-chevron {
