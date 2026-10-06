@@ -2950,8 +2950,8 @@
       const c = cases.find(x => x.id === currentCaseId);
       if (!c) return;
 
-      // 點進去一樣預設第一個選項（審查中）
-      modalSelectedStatus = 'review';
+      // 如未設定，預設停在第 1 個選項（審查中）；如之前有選過，點進去停在該設定處
+      modalSelectedStatus = (c.status && ['review', 'accepted', 'rejected', 'closed'].includes(c.status)) ? c.status : 'review';
       selectDecisionOption(modalSelectedStatus, false);
 
       const inputAcc = document.getElementById('modalAcceptedDateInput');
