@@ -610,13 +610,13 @@
     .back-btn {
       display: inline-flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.65rem;
       color: var(--slate-600);
       font-size: 0.95rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       text-decoration: none;
-      padding: 0.4rem 0.8rem;
+      padding: 0.45rem 0.9rem;
       border-radius: var(--radius-sm);
       transition: all 0.2s;
     }
@@ -624,6 +624,16 @@
     .back-btn:hover {
       background: white;
       color: var(--primary);
+    }
+
+    .back-arrow {
+      font-size: 1.35rem;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: -2px;
+      font-weight: 800;
     }
 
     /* Minimal Controls Panel */
@@ -1392,6 +1402,29 @@
       border: 1px solid #fecaca;
     }
 
+    .decision-pill.is-closed {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    .case-status-badge.status-closed {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    #view-detail.case-closed {
+      filter: grayscale(1);
+    }
+
+    .case-card.case-closed {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      filter: grayscale(1);
+      opacity: 0.88;
+    }
+
     .decision-chevron {
       color: var(--slate-400);
       font-size: 1.1rem;
@@ -1605,6 +1638,7 @@
           <button class="filter-pill" onclick="setFilter('review', this)">受理審查中</button>
           <button class="filter-pill" onclick="setFilter('accepted', this)">已受理</button>
           <button class="filter-pill" onclick="setFilter('rejected', this)">不予受理</button>
+          <button class="filter-pill" onclick="setFilter('closed', this)">已結案</button>
         </div>
         <div class="filter-sort-wrapper">
           <button type="button" id="btnToggleSort" class="sort-pill-btn" onclick="toggleCaseSort()" title="點擊切換為：依照截止排序">
@@ -1622,7 +1656,8 @@
     <div id="view-detail" class="view-container">
       <div class="detail-nav">
         <a class="back-btn" id="detailNavBack" onclick="navigateTo('home')">
-          <span>←</span> 返回各案件清單
+          <span class="back-arrow">←</span>
+          <span>返回各案件清單</span>
         </a>
         <div style="display: flex; gap: 0.5rem;">
           <button class="btn btn-outline btn-sm" onclick="window.print()">
@@ -1662,18 +1697,17 @@
             </div>
           </div>
 
-          <!-- 受理審查決定與受理與否按鈕 -->
+          <!-- 案件狀態設定按鈕 -->
           <div class="form-group">
             <label class="form-label">
-              <span>⚖️ 受理決定</span>
+              <span>📌 案件狀態</span>
             </label>
             <div>
               <button type="button" id="btnDecisionModal" class="btn-decision-card" onclick="openDecisionModal()">
                 <div class="decision-card-left">
-                  <span class="decision-icon">⚖️</span>
+                  <span class="decision-icon">📌</span>
                   <div class="decision-info">
-                    <span class="decision-title">受理與否</span>
-                    <span id="decisionCurrentText" class="decision-sub">目前狀態：審查中（點擊設定）</span>
+                    <span id="decisionCurrentText" class="decision-title">目前狀態：審查中（點擊設定）</span>
                   </div>
                 </div>
                 <div class="decision-card-right">
@@ -1817,15 +1851,15 @@
     <div class="modal-dialog decision-modal-dialog" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.35rem;">⚖️</span>
-          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">受理審查決定</h3>
+          <span style="font-size: 1.35rem;">📌</span>
+          <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--slate-900);">案件狀態設定</h3>
         </div>
         <button type="button" style="border: none; background: transparent; font-size: 1.25rem; cursor: pointer;" onclick="closeDecisionModal()">✕</button>
       </div>
       <div class="modal-body" style="padding: 1.25rem 1.5rem;">
-        <div style="font-weight: 700; color: var(--slate-700); margin-bottom: 0.85rem; font-size: 0.92rem;">請選擇受理審查結果：</div>
+        <div style="font-weight: 700; color: var(--slate-700); margin-bottom: 0.85rem; font-size: 0.92rem;">請選擇案件目前狀態：</div>
 
-        <!-- 3 Options -->
+        <!-- 4 Options -->
         <div class="decision-options-group">
           <!-- Option 1: 審查中 -->
           <div id="optReview" class="decision-option-card" onclick="selectDecisionOption('review')">
@@ -1894,6 +1928,18 @@
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Option 4: 已結案 -->
+          <div id="optClosed" class="decision-option-card" onclick="selectDecisionOption('closed')">
+            <div class="option-radio-circle"></div>
+            <div class="option-content">
+              <div class="option-title-row">
+                <span class="option-title">🏁 已結案</span>
+                <span class="option-tag" style="background: #e2e8f0; color: #475569;">程序完成結案</span>
+              </div>
+              <div class="option-desc">案件調查與審議程序已全數完成，正式核定結案存查。</div>
             </div>
           </div>
         </div>
@@ -2558,7 +2604,15 @@
       const search = (document.getElementById('searchInput').value || '').trim().toLowerCase();
 
       const filtered = cases.filter(c => {
-        if (currentFilter !== 'all' && c.status !== currentFilter) return false;
+        if (currentFilter === 'all') {
+          // 首頁「全部」不顯示已結案
+          if (c.status === 'closed') return false;
+        } else if (currentFilter === 'closed') {
+          // 「已結案」只顯示已結案案件
+          if (c.status !== 'closed') return false;
+        } else {
+          if (c.status !== currentFilter) return false;
+        }
         if (search && !c.name.toLowerCase().includes(search)) return false;
         return true;
       });
@@ -2597,11 +2651,17 @@
       }
 
       if (filtered.length === 0) {
+        let emptyTitle = '目前尚無符合的案件';
+        let emptyDesc = '您可以點擊上方「新增霸凌申訴案」建立新案件。';
+        if (currentFilter === 'closed') {
+          emptyTitle = '目前尚無已結案的案件';
+          emptyDesc = '當案件程序完成並設定為「已結案」後，將會在此處歸檔顯示。';
+        }
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: var(--radius); border: 1px dashed var(--slate-300);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
-            <h4 style="font-size: 1.15rem; color: var(--slate-700);">目前尚無符合的案件</h4>
-            <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 0.25rem;">您可以點擊上方「新增霸凌申訴案」建立新案件。</p>
+            <h4 style="font-size: 1.15rem; color: var(--slate-700);">${emptyTitle}</h4>
+            <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 0.25rem;">${emptyDesc}</p>
           </div>
         `;
         return;
@@ -2610,16 +2670,26 @@
       grid.innerHTML = filtered.map(item => {
         const ms = calculateCaseMilestones(item);
         const cDate = formatDateDisplay(item.complaintDate);
+        const isClosed = (item.status === 'closed');
         
         let statusBadge = '<span class="case-status-badge status-review">⏳ 審查中</span>';
         if (item.status === 'accepted') {
           statusBadge = '<span class="case-status-badge status-accepted">✅ 已受理</span>';
         } else if (item.status === 'rejected') {
           statusBadge = '<span class="case-status-badge status-rejected">❌ 不予受理</span>';
+        } else if (item.status === 'closed') {
+          statusBadge = '<span class="case-status-badge status-closed">🏁 已結案</span>';
         }
 
         let nextDeadlineHtml = '';
-        if (ms) {
+        if (item.status === 'closed') {
+          nextDeadlineHtml = `
+            <div class="case-meta-row">
+              <span class="meta-label">案件狀態</span>
+              <span class="meta-value" style="color: var(--slate-600); font-weight: 700;">調查完成 ‧ 結案存查</span>
+            </div>
+          `;
+        } else if (ms) {
           if (item.status === 'rejected') {
             nextDeadlineHtml = `<div class="case-meta-row"><span class="meta-label">案件狀態</span><span class="meta-value" style="color: var(--danger);">不予受理結案</span></div>`;
           } else if (item.status === 'review' && !item.acceptedDate) {
@@ -2657,7 +2727,7 @@
         }
 
         return `
-          <div class="case-card" onclick="openCaseDetail('${item.id}')">
+          <div class="case-card ${isClosed ? 'case-closed' : ''}" onclick="openCaseDetail('${item.id}')">
             <div>
               <div class="case-card-header">
                 <h3 class="case-name">${item.name}</h3>
@@ -2702,16 +2772,37 @@
       const textEl = document.getElementById('decisionCurrentText');
       const pillEl = document.getElementById('decisionStatusPill');
       const badgeEl = document.getElementById('detailStatusBadge');
+      const detailContainer = document.getElementById('view-detail');
+
+      // 檢查是否已結案，並切換全部頁面灰色
+      if (c.status === 'closed') {
+        if (detailContainer) detailContainer.classList.add('case-closed');
+        if (pillEl) {
+          pillEl.className = 'decision-pill is-closed';
+          pillEl.innerText = '🏁 已結案';
+        }
+        if (textEl) {
+          textEl.className = 'decision-title is-closed';
+          textEl.innerText = '目前狀態：已結案（點擊設定）';
+        }
+        if (badgeEl) {
+          badgeEl.className = 'case-status-badge status-closed';
+          badgeEl.innerText = '🏁 已結案';
+        }
+        return;
+      }
+
+      // 非結案狀態：移除灰色濾鏡
+      if (detailContainer) detailContainer.classList.remove('case-closed');
 
       if (c.status === 'accepted' && c.acceptedDate) {
-        const dInfo = formatDateDisplay(c.acceptedDate);
         if (pillEl) {
           pillEl.className = 'decision-pill is-accepted';
           pillEl.innerText = '✅ 已受理';
         }
         if (textEl) {
-          textEl.className = 'decision-sub is-accepted';
-          textEl.innerText = `已於 ${dInfo.rocShort} 受理（後續時程以此起算）`;
+          textEl.className = 'decision-title is-accepted';
+          textEl.innerText = '目前狀態：已受理（點擊設定）';
         }
         if (badgeEl) {
           badgeEl.className = 'case-status-badge status-accepted';
@@ -2723,12 +2814,8 @@
           pillEl.innerText = '❌ 不予受理';
         }
         if (textEl) {
-          textEl.className = 'decision-sub is-rejected';
-          if (c.rejectedDate) {
-            textEl.innerText = `決議不予受理結案（${formatDateDisplay(c.rejectedDate).rocShort}）`;
-          } else {
-            textEl.innerText = '決議不予受理結案';
-          }
+          textEl.className = 'decision-title is-rejected';
+          textEl.innerText = '目前狀態：不予受理（點擊設定）';
         }
         if (badgeEl) {
           badgeEl.className = 'case-status-badge status-rejected';
@@ -2740,7 +2827,7 @@
           pillEl.innerText = '⏳ 審查中';
         }
         if (textEl) {
-          textEl.className = 'decision-sub is-review';
+          textEl.className = 'decision-title is-review';
           textEl.innerText = '目前狀態：審查中（點擊設定）';
         }
         if (badgeEl) {
@@ -2756,7 +2843,8 @@
       const c = cases.find(x => x.id === currentCaseId);
       if (!c) return;
 
-      modalSelectedStatus = c.status || 'review';
+      // 點進去一樣預設第一個選項（審查中）
+      modalSelectedStatus = 'review';
       selectDecisionOption(modalSelectedStatus, false);
 
       const inputAcc = document.getElementById('modalAcceptedDateInput');
@@ -2780,8 +2868,8 @@
     function selectDecisionOption(status, focusInput = true) {
       modalSelectedStatus = status;
 
-      // Update card selected classes
-      ['review', 'accepted', 'rejected'].forEach(s => {
+      // Update card selected classes (4 options)
+      ['review', 'accepted', 'rejected', 'closed'].forEach(s => {
         const idName = `opt${s.charAt(0).toUpperCase() + s.slice(1)}`;
         const el = document.getElementById(idName);
         if (el) {
@@ -2860,6 +2948,8 @@
         } else {
           c.rejectedDate = '';
         }
+      } else if (modalSelectedStatus === 'closed') {
+        c.status = 'closed';
       }
 
       c.updatedAt = new Date().toISOString();
