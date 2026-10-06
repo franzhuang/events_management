@@ -138,38 +138,73 @@
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     }
 
+    @keyframes blinkRedDot {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1.15);
+      }
+      50% {
+        opacity: 0.15;
+        transform: scale(0.75);
+      }
+    }
+
+    .blink-dot {
+      display: inline-block;
+      color: #ef4444;
+      font-size: 0.85rem;
+      line-height: 1;
+      margin-right: 0.25rem;
+      animation: blinkRedDot 1.1s infinite ease-in-out;
+      vertical-align: middle;
+    }
+
+    .prompt-dot {
+      display: inline-block;
+      font-size: 0.8rem;
+      margin-right: 0.25rem;
+      vertical-align: middle;
+    }
+
+    .btn-header-save {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      background: var(--primary);
+      color: white;
+      border: 1.5px solid var(--primary);
+      padding: 0.35rem 0.9rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      outline: none;
+      user-select: none;
+    }
+
+    .btn-header-save:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+      box-shadow: 0 1px 5px rgba(37, 99, 235, 0.28);
+    }
+
     .storage-status-pill.linked {
-      background: #ecfdf5;
-      border-color: #a7f3d0;
-      color: #065f46;
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #991b1b;
     }
 
     .storage-status-pill.linked:hover {
-      background: #d1fae5;
-      border-color: #34d399;
+      background: #fee2e2;
+      border-color: #f87171;
     }
 
     .storage-status-pill.prompt {
       background: #fffbeb;
       border-color: #fde68a;
       color: #b45309;
-    }
-
-    .storage-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #94a3b8;
-    }
-
-    .storage-status-pill.linked .storage-dot {
-      background: #10b981;
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
-    }
-
-    .storage-status-pill.prompt .storage-dot {
-      background: #f59e0b;
-      box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
     }
 
     .storage-time {
@@ -1549,14 +1584,12 @@
         </div>
       </div>
       <div class="header-right-tools">
-        <button id="btnFileStorageStatus" class="storage-status-pill" onclick="connectOrManageLocalFile()" title="點選連結或管理同資料夾下的「霸凌申訴案件.json」硬碟實體檔案">
-          <span class="storage-dot"></span>
-          <span id="storageStatusText">📁 連結檔案：霸凌申訴案件.json</span>
+        <button type="button" id="btnFileStorageStatus" class="storage-status-pill" onclick="connectOrManageLocalFile()" title="點選連結硬碟案件紀錄檔">
+          <span id="storageStatusText">連結紀錄檔</span>
         </button>
-
-        <span class="badge-dgpa">
-          <span>●</span> 內建 114～116 年 DGPA 辦公日曆
-        </span>
+        <button type="button" id="btnManualSave" class="btn-header-save" onclick="handleManualSaveCaseFile()" title="儲存所有案件至紀錄檔">
+          <span>💾 儲存</span>
+        </button>
       </div>
     </div>
   </header>
@@ -2130,21 +2163,61 @@
       const textEl = document.getElementById('storageStatusText');
       if (!btn || !textEl) return;
 
-      const now = new Date();
-      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
       if (state === 'linked') {
         btn.className = 'storage-status-pill linked';
-        btn.title = `已即時連結「${filename}」！點選可更換或重新連結檔案。`;
-        textEl.innerHTML = `📁 已同步：${filename} <span class="storage-time">${timeStr} 存檔</span>`;
+        btn.title = `已連結「${filename}」，修改資料時將自動儲存！點選可更換檔案。`;
+        textEl.innerHTML = `<span class="blink-dot">●</span>連結紀錄檔`;
       } else if (state === 'prompt') {
         btn.className = 'storage-status-pill prompt';
-        btn.title = `已定位「${filename}」，點選授予讀寫權限即可開始同步。`;
-        textEl.innerHTML = `🟡 點此同步：${filename}`;
+        btn.title = `已記住「${filename}」，點選此處一鍵授權即可恢復同步！`;
+        textEl.innerHTML = `<span class="prompt-dot">🟡</span>連結紀錄檔`;
       } else {
         btn.className = 'storage-status-pill';
-        btn.title = `點選連結同資料夾下的「${filename}」硬碟實體檔案`;
-        textEl.innerHTML = `📁 連結檔案：${filename}`;
+        btn.title = `點選連結硬碟中的現有案件紀錄檔`;
+        textEl.innerHTML = `連結紀錄檔`;
+      }
+    }
+
+    async function handleManualSaveCaseFile() {
+      // 情況 A：如之前已連結，按下去就再執行寫入一次
+      if (localFileHandle) {
+        try {
+          const perm = await verifyFilePermission(localFileHandle);
+          if (perm) {
+            const ok = await writeToLocalFile(cases);
+            if (ok) {
+              showSaveToast(`✓ 已成功儲存至「${localFileHandle.name}」！`);
+              updateFileStorageUI('linked', localFileHandle.name);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Manual save existing file error:', e);
+        }
+      }
+
+      // 情況 B：如之前未連結，則產生.json檔，並詢問使用者儲存何處，檔名可隨使用者喜好自行修改
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: '霸凌申訴案件.json',
+            types: [{
+              description: 'JSON 案件紀錄檔 (*.json)',
+              accept: { 'application/json': ['.json'] }
+            }]
+          });
+          if (handle) {
+            await attachFileHandle(handle, true);
+            showSaveToast(`✓ 已成功建立並儲存至「${handle.name}」，已啟用自動儲存！`);
+          }
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.error('Save file error:', err);
+            downloadCasesJsonFile();
+          }
+        }
+      } else {
+        downloadCasesJsonFile();
       }
     }
 
