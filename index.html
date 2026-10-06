@@ -1571,9 +1571,6 @@
           <h2>職場霸凌案件時限管理</h2>
         </div>
         <div style="display: flex; gap: 0.75rem;">
-          <button class="btn btn-outline" onclick="loadSampleCases()">
-            <span>🔄</span> 載入示範案件（台積電 / 東方太空）
-          </button>
           <button class="btn btn-primary" onclick="openNewCaseModal()">
             <span>＋</span> 新增霸凌申訴案
           </button>
@@ -1912,7 +1909,7 @@
       <div class="modal-body">
         <div class="form-group">
           <label class="form-label">案件名稱</label>
-          <input type="text" id="newCaseName" class="date-input-wrapper" style="padding: 0.65rem 0.85rem;" placeholder="例：台積電Jason案">
+          <input type="text" id="newCaseName" class="date-input-wrapper" style="padding: 0.65rem 0.85rem;" placeholder="例：某某申訴案（如陳OO申訴案）">
         </div>
         <div class="form-group">
           <label class="form-label">接獲申訴日</label>
@@ -2012,6 +2009,22 @@
         alert('您的瀏覽器未支援直接寫入本機檔案（建議使用 Google Chrome 或 Microsoft Edge）。\n系統目前已為您在瀏覽器本機快取中即時存檔。點擊確定即可將所有案件下載為「霸凌申訴案件.json」備份。');
         downloadCasesJsonFile();
         return;
+      }
+
+      // 若先前已連結過檔案（重開網頁後處於待授權狀態），一鍵喚醒權限即可，免去重複翻找檔案
+      if (localFileHandle) {
+        try {
+          const qPerm = await localFileHandle.queryPermission({ mode: 'readwrite' });
+          if (qPerm !== 'granted') {
+            const reqPerm = await localFileHandle.requestPermission({ mode: 'readwrite' });
+            if (reqPerm === 'granted') {
+              await attachFileHandle(localFileHandle, false);
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Direct permission resume failed, opening picker:', e);
+        }
       }
 
       try {
@@ -2184,8 +2197,14 @@
           cases = [];
         }
       }
-      if (!cases || cases.length === 0) {
-        loadSampleCases(false);
+      if (!Array.isArray(cases)) {
+        cases = [];
+      }
+      // 自動過濾早期系統預設的示範資料（使用者自行建立的真實案件均完整保留）
+      const prevLen = cases.length;
+      cases = cases.filter(c => c.id !== 'case_tsmc' && c.id !== 'case_oriental_space');
+      if (cases.length !== prevLen) {
+        localStorage.setItem('dgpa_reminder_cases_v4', JSON.stringify(cases));
       }
       renderCaseCards();
 
@@ -2238,33 +2257,6 @@
       }
     }
 
-    function loadSampleCases(doRender = true) {
-      const sample1 = {
-        id: 'case_tsmc',
-        name: '台積電Jason案',
-        complaintDate: '2026-10-02',
-        status: 'review',
-        acceptedDate: '',
-        createdAt: '2026-10-02T09:00:00.000Z',
-        updatedAt: '2026-10-03T14:00:00.000Z'
-      };
-      const sample2 = {
-        id: 'case_oriental_space',
-        name: '東方太空有限公司',
-        complaintDate: '2026-10-01',
-        status: 'accepted',
-        acceptedDate: '2026-10-08',
-        createdAt: '2026-10-01T10:00:00.000Z',
-        updatedAt: '2026-10-03T10:00:00.000Z'
-      };
-
-      const customCases = cases.filter(c => c.name !== '台積電Jason案' && c.name !== '東方太空有限公司');
-      cases = [sample1, sample2, ...customCases];
-      saveCases();
-      if (doRender) {
-        renderCaseCards();
-      }
-    }
 
     // =========================================================================
     // ENHANCED DATE PARSING & FORMATTING (SUPPORTS 10/8, 115.10.8, 2026-10-08...)
@@ -2548,7 +2540,7 @@
           <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: white; border-radius: var(--radius); border: 1px dashed var(--slate-300);">
             <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">📂</div>
             <h4 style="font-size: 1.15rem; color: var(--slate-700);">目前尚無符合的案件</h4>
-            <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 0.25rem;">您可以點擊上方「新增霸凌申訴案」或「載入示範」進行體驗。</p>
+            <p style="color: var(--slate-500); font-size: 0.9rem; margin-top: 0.25rem;">您可以點擊上方「新增霸凌申訴案」建立新案件。</p>
           </div>
         `;
         return;
