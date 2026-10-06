@@ -2640,13 +2640,15 @@
         btn.className = 'storage-status-pill linked';
         btn.title = `已連結紀錄檔（${filename}），修改資料時將自動即時儲存！點選可更換檔案。`;
         textEl.innerHTML = `<span class="status-dot green"></span>已連結紀錄檔`;
-      } else if (state === 'prompt') {
-        btn.className = 'storage-status-pill prompt';
-        btn.title = `已記住「${filename}」，點選此處確認授權即可恢復連線！`;
-        textEl.innerHTML = `<span class="status-dot yellow"></span>已連結紀錄檔`;
       } else {
+        // 尚未取得權限時（包括剛刷新網頁待使用者確認授權、或初次未連結）：
+        // 一律回歸「連結紀錄檔」，避免在未取得硬碟讀寫權限時誤導呈現「已連結」
         btn.className = 'storage-status-pill';
-        btn.title = `點選連結硬碟中的現有案件紀錄檔`;
+        if (state === 'prompt') {
+          btn.title = `已記住「${filename}」，點選此處確認授權即可直接連線！`;
+        } else {
+          btn.title = `點選連結硬碟中的案件紀錄檔`;
+        }
         textEl.innerHTML = `連結紀錄檔`;
       }
     }
