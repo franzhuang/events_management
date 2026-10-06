@@ -1577,16 +1577,6 @@
         </div>
       </div>
 
-      <!-- File Sync Notice Banner (方案 B 引導提示) -->
-      <div id="fileSyncBanner" class="file-sync-banner" style="display: none;">
-        <div class="file-sync-banner-text">
-          <span>💾</span>
-          <span><b>硬碟實體存檔（方案 B）</b>：同目錄下已備妥「霸凌申訴案件.json」。點擊右方按鈕即可與實體檔案連結，直接讀寫硬碟！</span>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="connectOrManageLocalFile()">
-          <span>📁</span> 立即連結「霸凌申訴案件.json」
-        </button>
-      </div>
 
       <!-- Search & Filter Bar -->
       <div class="filter-bar">
@@ -2138,7 +2128,6 @@
     function updateFileStorageUI(state, filename = '霸凌申訴案件.json') {
       const btn = document.getElementById('btnFileStorageStatus');
       const textEl = document.getElementById('storageStatusText');
-      const banner = document.getElementById('fileSyncBanner');
       if (!btn || !textEl) return;
 
       const now = new Date();
@@ -2148,7 +2137,6 @@
         btn.className = 'storage-status-pill linked';
         btn.title = `已即時連結「${filename}」！點選可更換或重新連結檔案。`;
         textEl.innerHTML = `📁 已同步：${filename} <span class="storage-time">${timeStr} 存檔</span>`;
-        if (banner) banner.style.display = 'none';
       } else if (state === 'prompt') {
         btn.className = 'storage-status-pill prompt';
         btn.title = `已定位「${filename}」，點選授予讀寫權限即可開始同步。`;
@@ -2157,7 +2145,6 @@
         btn.className = 'storage-status-pill';
         btn.title = `點選連結同資料夾下的「${filename}」硬碟實體檔案`;
         textEl.innerHTML = `📁 連結檔案：${filename}`;
-        if (banner) banner.style.display = 'flex';
       }
     }
 
@@ -2459,7 +2446,7 @@
     // =========================================================================
     // CASE LIST VIEW: FILTER & SORT (預設編輯排序 ‧ 可切換報告截止日排序)
     // =========================================================================
-    let currentSort = 'edit'; // 'edit' (預設：最近修改的放最近) 或 'report_deadline' (截止排序)
+    let currentSort = 'edit'; // 'edit' (預設：最近修改), 'report_deadline' (截止排序), 或 'name' (名稱排序)
 
     function setFilter(filterType, btnEl) {
       currentFilter = filterType;
@@ -2471,6 +2458,8 @@
     function toggleCaseSort() {
       if (currentSort === 'edit') {
         currentSort = 'report_deadline';
+      } else if (currentSort === 'report_deadline') {
+        currentSort = 'name';
       } else {
         currentSort = 'edit';
       }
@@ -2486,9 +2475,14 @@
 
       if (currentSort === 'report_deadline') {
         btn.classList.add('active');
-        btn.title = '目前依「報告截止日（由近到遠）」排序，再按一次切換回「編輯排序」';
+        btn.title = '目前依「報告截止日（由近到遠）」排序，點擊切換為「名稱排序」';
         icon.innerText = '⏳';
         text.innerText = '截止排序';
+      } else if (currentSort === 'name') {
+        btn.classList.add('active');
+        btn.title = '目前依「案件名稱（A-Z / 筆畫）」排序，點擊切換為「編輯排序」';
+        icon.innerText = '🔤';
+        text.innerText = '名稱排序';
       } else {
         btn.classList.remove('active');
         btn.title = '目前依「最近編輯」排序，點擊切換為「截止排序」';
@@ -2522,6 +2516,17 @@
           if (dA !== dB) {
             return dA.localeCompare(dB);
           }
+          const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+          const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+          return tB - tA;
+        });
+      } else if (currentSort === 'name') {
+        // 依照案件名稱排序 (繁體中文筆畫/注音順序)
+        filtered.sort((a, b) => {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          const comp = nameA.localeCompare(nameB, 'zh-Hant');
+          if (comp !== 0) return comp;
           const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
           const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
           return tB - tA;
