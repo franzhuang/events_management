@@ -2,12 +2,25 @@
 *.png
 *.log
 .DS_Store
+Thumbs.db
 test_*.js
+*.bak
+*.tmp
+*.swp
+*~
+
+# IDE 與編輯器設定
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
 
 # 排除開發建置過渡檔（資料已內嵌至 index.html）
 build_clean.py
 template.html
 calendar_db.json
 
-# 排除本機實際案件資料（保護個人隱私，不公開上傳至 GitHub）
+# 排除本機實際案件資料（保護個人隱私與機敏個資，絕不公開上傳至 GitHub）
 霸凌申訴案件.json
+霸凌申訴案件*.json
+cases*.json
