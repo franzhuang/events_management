@@ -2167,15 +2167,15 @@
           <div class="timeline-map-legend">
             <div class="legend-chip">
               <span class="legend-dot" style="background: #2563eb;"></span>
-              <span class="legend-text">通報系統（受理後 7 日）</span>
+              <span class="legend-text">通報系統（受理翌日起 7 日）</span>
             </div>
             <div class="legend-chip">
               <span class="legend-dot" style="background: #059669;"></span>
-              <span class="legend-text">成立調查小組（受理後 15 日）</span>
+              <span class="legend-text">成立調查小組（受理申訴日起 15 日）</span>
             </div>
             <div class="legend-chip">
               <span class="legend-dot" style="background: #dc2626; box-shadow: 0 0 0 2px rgba(220,38,38,0.25);"></span>
-              <span class="legend-text" style="color: #b91c1c; font-weight: 700;">完成調查報告（法定 2 個月）</span>
+              <span class="legend-text" style="color: #b91c1c; font-weight: 700;">完成調查報告（成立翌日起 2 個月）</span>
             </div>
           </div>
         </div>
@@ -2893,8 +2893,9 @@
       return `${y}-${m}-${d}`;
     }
 
-    function addWorkingDays(startDateStr, n) {
-      let curr = getNextDateStr(startDateStr);
+    // 計算工作日增加（支援：翌日起算 fromNextDay = true，當日起算 fromNextDay = false）
+    function addWorkingDays(startDateStr, n, fromNextDay = true) {
+      let curr = fromNextDay ? getNextDateStr(startDateStr) : startDateStr;
       let count = 0;
       const breakdown = [];
       while (count < n) {
@@ -2914,16 +2915,42 @@
       return { endDate: curr, breakdown };
     }
 
-    function addCivilMonths(startDateStr, months) {
-      const [y, m, d] = startDateStr.split('-').map(x => parseInt(x, 10));
-      const totalM = m + months;
-      const targetY = y + Math.floor((totalM - 1) / 12);
-      const targetM = ((totalM - 1) % 12) + 1;
-      const maxDays = new Date(targetY, targetM, 0).getDate();
-      const targetD = Math.min(d, maxDays);
-      
+    // 依《民法》第 120 條第 2 項及第 121 條，自調查小組成立翌日起算月期間（日曆天）
+    function addCivilMonths(teamDateStr, months) {
+      const [y, m, d] = teamDateStr.split('-').map(x => parseInt(x, 10));
+      const teamDate = new Date(y, m - 1, d);
+      const nextDate = new Date(teamDate);
+      nextDate.setDate(nextDate.getDate() + 1);
+
+      const startY = nextDate.getFullYear();
+      const startM = nextDate.getMonth() + 1;
+      const startD = nextDate.getDate();
+
+      let targetY, targetM, targetD;
+
+      if (startD === 1) {
+        // 依民法第 121 條第 1 項：自月之始日起算者，以最後之月之末日為期間之末日
+        const endMTotal = startM + months - 1;
+        targetY = startY + Math.floor((endMTotal - 1) / 12);
+        targetM = ((endMTotal - 1) % 12) + 1;
+        targetD = new Date(targetY, targetM, 0).getDate();
+      } else {
+        // 依民法第 121 條第 2 項：期間不以月之始日起算者，以最後之月與起算日相當日之前一日為期間之末日
+        const endMTotal = startM + months;
+        targetY = startY + Math.floor((endMTotal - 1) / 12);
+        targetM = ((endMTotal - 1) % 12) + 1;
+        const maxDays = new Date(targetY, targetM, 0).getDate();
+        if (startD > maxDays) {
+          // 月之末日少於起算日者，以該月末日為期間之末日
+          targetD = maxDays;
+        } else {
+          // 相當日之前一日
+          targetD = startD - 1;
+        }
+      }
+
       const nominalDate = `${targetY}-${String(targetM).padStart(2, '0')}-${String(targetD).padStart(2, '0')}`;
-      
+
       let curr = nominalDate;
       const delayedReasons = [];
       while (!isWorkday(curr)) {
@@ -2938,29 +2965,33 @@
     }
 
     // =========================================================================
-    // MILESTONES CALCULATION (CRITICAL: STRICT RECALCULATION ON ACCEPTED DATE)
+    // MILESTONES CALCULATION (STRICT ACCORDANCE WITH LABOUR REGULATIONS)
+    // 1. 決定是否受理：接獲申訴之日起 10 個工作日內（當日起算）
+    // 2. 登錄通報系統：受理翌日起 7 個工作日內（翌日起算）
+    // 3. 組成調查小組：受理申訴日起 15 個工作日內（當日起算）
+    // 4. 完成調查報告：調查小組成立翌日起 2 個月內（翌日起算，必要時延長1個月）
     // =========================================================================
     function calculateCaseMilestones(caseItem) {
       const t0 = caseItem.complaintDate;
       if (!t0) return null;
 
-      // 階段 1: 10 個工作日審查期限
-      const step1 = addWorkingDays(t0, 10);
+      // 階段 1: 接獲申訴之日起 10 個工作日決定是否受理（當日起算）
+      const step1 = addWorkingDays(t0, 10, false);
 
       // 若有鍵入受理日期，則後續時限「必須嚴格以該受理日為基準起算」，不得再以申訴日起算！
       const hasActualAccepted = Boolean(caseItem.acceptedDate && String(caseItem.acceptedDate).trim().length > 0);
       const acceptBaseDate = hasActualAccepted ? String(caseItem.acceptedDate).trim() : step1.endDate;
 
-      // 階段 2: 通報主管機關（受理後 7 個工作日）
-      const step2 = addWorkingDays(acceptBaseDate, 7);
+      // 階段 2: 登錄通報系統（受理翌日起 7 個工作日，翌日起算）
+      const step2 = addWorkingDays(acceptBaseDate, 7, true);
 
-      // 階段 3: 成立調查小組（受理後 15 個工作日）
-      const step3 = addWorkingDays(acceptBaseDate, 15);
+      // 階段 3: 組成調查小組（受理申訴日起 15 個工作日，當日起算）
+      const step3 = addWorkingDays(acceptBaseDate, 15, false);
 
-      // 階段 4: 完成調查報告（成立調查小組起 2 個月日曆天）
+      // 階段 4: 完成調查報告（調查小組成立翌日起 2 個月日曆天，翌日起算）
       const step4 = addCivilMonths(step3.endDate, 2);
 
-      // 階段 5: 展延完成（成立調查小組起 3 個月日曆天）
+      // 階段 5: 展延完成（調查小組成立翌日起 3 個月日曆天，翌日起算）
       const step5 = addCivilMonths(step3.endDate, 3);
 
       return {
@@ -3042,9 +3073,9 @@
             complaintDate: c.complaintDate,
             acceptedDate: c.acceptedDate,
             milestones: ms,
-            t1: ms.step2.endDate,         // 1. 通報系統 (受理後 7 個工作日)
-            t2: ms.step3.endDate,         // 2. 成立調查小組 (受理後 15 個工作日)
-            t3: ms.step4.effectiveDate    // 3. 完成調查報告 (成立調查小組起 2 個月法定截止)
+            t1: ms.step2.endDate,         // 1. 通報系統 (受理翌日起 7 個工作日，翌日起算)
+            t2: ms.step3.endDate,         // 2. 成立調查小組 (受理申訴日起 15 個工作日，當日起算)
+            t3: ms.step4.effectiveDate    // 3. 完成調查報告 (成立調查小組翌日起 2 個月法定截止，翌日起算)
           });
         } else {
           casesWithoutDate.push(c);
@@ -3263,7 +3294,7 @@
 
             <!-- 節點 1: 通報系統 (藍色點) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
-              <title>【${escapeXml(item.name)}】通報系統時限：${d1Disp.roc} (${d1Disp.fullDayName}) ｜ 法定受理後 7 個工作日</title>
+              <title>【${escapeXml(item.name)}】通報系統時限：${d1Disp.roc} (${d1Disp.fullDayName}) ｜ 受理翌日起 7 個工作日（翌日起算）</title>
               <!-- 標籤文字 (放置於點上方，上下行距 12px 分明不重疊) -->
               <text x="${x1}" y="${centerY - 22}" text-anchor="middle" class="map-node-label-title" fill="#1d4ed8">通報系統</text>
               <text x="${x1}" y="${centerY - 10}" text-anchor="middle" class="map-node-label-date" fill="#2563eb">${d1Disp.rocShort}</text>
@@ -3273,7 +3304,7 @@
 
             <!-- 節點 2: 成立調查小組 (綠色點) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
-              <title>【${escapeXml(item.name)}】成立調查小組時限：${d2Disp.roc} (${d2Disp.fullDayName}) ｜ 法定受理後 15 個工作日</title>
+              <title>【${escapeXml(item.name)}】成立調查小組時限：${d2Disp.roc} (${d2Disp.fullDayName}) ｜ 受理申訴日起 15 個工作日（當日起算）</title>
               <!-- 標籤文字 (錯位放置於點下方，上下行距 12px 分明不重疊) -->
               <circle cx="${x2}" cy="${centerY}" r="7" fill="#059669" stroke="#ffffff" stroke-width="2.5" class="node-core" />
               <text x="${x2}" y="${centerY + 19}" text-anchor="middle" class="map-node-label-title" fill="#065f46">成立調查小組</text>
@@ -3282,7 +3313,7 @@
 
             <!-- 節點 3: 完成調查報告 (紅色點 - 使用者特別規定) -->
             <g class="map-node-group" onclick="openCaseDetail('${item.id}')">
-              <title>【${escapeXml(item.name)}】完成調查報告截止：${d3Disp.roc} (${d3Disp.fullDayName}) ｜ 法定成立調查小組起 2 個月日曆天</title>
+              <title>【${escapeXml(item.name)}】完成調查報告截止：${d3Disp.roc} (${d3Disp.fullDayName}) ｜ 調查小組成立翌日起 2 個月日曆天（翌日起算）</title>
               <!-- 標籤文字 (放置於點上方，上下行距 12px 分明不重疊) -->
               <text x="${x3}" y="${centerY - 22}" text-anchor="middle" class="map-node-label-title" fill="#b91c1c">完成調查報告</text>
               <text x="${x3}" y="${centerY - 10}" text-anchor="middle" class="map-node-label-date" fill="#dc2626">${d3Disp.rocShort}</text>
@@ -3857,7 +3888,7 @@
           title: '接獲申訴',
           dateStr: ms.complaintDate,
           isUp: true,
-          rule: '案件起算點（始日不計入）'
+          rule: '接獲申訴之日起算（當日起算）'
         });
 
         // 若有鍵入不予受理日，則列入
@@ -3895,7 +3926,7 @@
           title: '接獲申訴',
           dateStr: ms.complaintDate,
           isUp: true,
-          rule: '案件起算點（始日不計入）'
+          rule: '接獲申訴之日起算（當日起算）'
         });
 
         // 第二節點：依使用者指示：
@@ -3906,7 +3937,7 @@
             title: '已受理',
             dateStr: ms.acceptBaseDate,
             isUp: false,
-            rule: `已於實際受理日（${formatDateDisplay(ms.acceptBaseDate).rocShort}）正式立案`
+            rule: `於實際受理日（${formatDateDisplay(ms.acceptBaseDate).rocShort}）正式立案`
           });
         } else {
           events.push({
@@ -3914,7 +3945,7 @@
             title: '受理與否',
             dateStr: ms.step1.endDate,
             isUp: false,
-            rule: '法定 10 個工作日審查期限'
+            rule: '接獲申訴日起 10 個工作日（當日起算）'
           });
         }
 
@@ -3924,28 +3955,28 @@
             title: '通報系統',
             dateStr: ms.step2.endDate,
             isUp: true,
-            rule: ms.hasActualAccepted ? '已受理日起算 7 個工作日' : '受理後 7 個工作日'
+            rule: ms.hasActualAccepted ? '受理翌日起 7 個工作日（翌日起算）' : '受理翌日起 7 個工作日'
           },
           {
             key: 'committee',
             title: '成立調查小組',
             dateStr: ms.step3.endDate,
             isUp: false,
-            rule: ms.hasActualAccepted ? '已受理日起算 15 個工作日' : '受理後 15 個工作日'
+            rule: ms.hasActualAccepted ? '受理申訴日起 15 個工作日（當日起算）' : '受理申訴日起 15 個工作日'
           },
           {
             key: 'report',
             title: '完成調查報告',
             dateStr: ms.step4.effectiveDate,
             isUp: true,
-            rule: '成立小組後 2 個月（日曆天）'
+            rule: '成立翌日起 2 個月（日曆天，翌日起算）'
           },
           {
             key: 'extended',
             title: '展延完成',
             dateStr: ms.step5.effectiveDate,
             isUp: false,
-            rule: '得展延 1 個月（累計 3 個月）'
+            rule: '成立翌日起累計 3 個月（得展延 1 個月）'
           }
         );
       }
@@ -4273,11 +4304,11 @@
       if (milestoneKey === 'complaint') {
         targetDate = ms.complaintDate;
         titleText = '📥 第 1 階段：接獲申訴（起始基準日）';
-        ruleText = '案件起始日 ‧ 始日不計入';
+        ruleText = '接獲申訴日 ‧ 當日起算';
         legalHtml = `
           <b>【法定依據與起算規定】</b><br>
-          機關或單位接獲申訴書之日。依《民法》第 120 條第 2 項規定：「以日、星期、月或年定期間者，其始日不算入。」<br>
-          因此，受理審查之 10 個工作日期間，自接獲申訴日之<b>次一工作日起算</b>。
+          機關或單位接獲申訴書之日。依《職場霸凌防治措施準則》第 10 條第 1 項規定，雇主應於<b>接獲申訴之日起 10 個工作日內</b>決定是否受理。<br>
+          依勞動部官方處理期限規範，此 10 個工作日為<b>當日起算（始日計入工作日）</b>，如接獲當日遇假日則順延至首個正常工作日起算。
         `;
         breakdownSection.style.display = 'none';
       } else if (milestoneKey === 'review' || milestoneKey === 'accepted') {
@@ -4287,20 +4318,22 @@
           ruleText = '實際已受理日 ‧ 後續起算基準';
           legalHtml = `
             <b>【實際受理與後續時限重算基準】</b><br>
-            本案接獲申訴日為 <b>${formatDateDisplay(ms.complaintDate).roc}</b>，原法定受理審查期限為 10 個工作日內（至 ${formatDateDisplay(ms.step1.endDate).roc} 止）。<br>
+            本案接獲申訴日為 <b>${formatDateDisplay(ms.complaintDate).roc}</b>，原法定審查期限為接獲申訴之日起 10 個工作日內（當日起算，至 ${formatDateDisplay(ms.step1.endDate).roc} 止）。<br>
             <b>本案已於【${formatDateDisplay(ms.acceptBaseDate).roc}】正式決定受理。</b><br>
-            依職場霸凌申訴作業規定，後續之「通報系統（受理後 7 個工作日）」、「成立調查小組（受理後 15 個工作日）」等程序，均<b>嚴格以此「已受理日」（${formatDateDisplay(ms.acceptBaseDate).rocShort}）之次一工作日起算</b>。
+            依《職場霸凌防治措施準則》官方規範，後續時限分流起算如下：<br>
+            • <b>登錄主管機關系統</b>：受理<b>翌日起 7 個工作日內（翌日起算）</b>（準則第 11 條）。<br>
+            • <b>組成調查小組</b>：受理申訴<b>日起 15 個工作日內（當日起算）</b>（準則第 14 條第 1 項）。
           `;
           holidayNotices = [];
           breakdownSection.style.display = 'none';
         } else {
           targetDate = ms.step1.endDate;
           titleText = '⚖️ 第 2 階段：受理與否審查決定期限';
-          ruleText = '法定 10 個工作日';
+          ruleText = '接獲申訴日起 10 個工作日（當日起算）';
           legalHtml = `
             <b>【法定依據與起算規定】</b><br>
-            依職場霸凌申訴處理作業規範，機關接獲申訴之日起 <b>10 個工作日內</b>應召開專責小組或審查會決定是否受理，並以書面通知申訴人。<br>
-            若尚未填寫實際受理日，後續通報與調查小組程序暫以此法定最晚受理期限（${formatDateDisplay(ms.step1.endDate).roc}）為起算基準。
+            依《職場霸凌防治措施準則》第 10 條第 1 項規定，雇主應於<b>接獲申訴之日起 10 個工作日內（當日起算）</b>召開專責小組或審查會決定是否受理，並以書面通知申訴人。<br>
+            本階段依法採<b>當日起算（始日計入）</b>；若尚未填寫實際受理日，後續登錄系統與調查小組程序暫以此法定最晚受理審查期限（${formatDateDisplay(ms.step1.endDate).roc}）為起算基準。
           `;
           holidayNotices = ms.step1.breakdown.filter(b => !b.isWork && b.note && !b.note.includes('週六') && !b.note.includes('週日'));
           breakdownList = ms.step1.breakdown;
@@ -4330,11 +4363,12 @@
       } else if (milestoneKey === 'notice') {
         targetDate = ms.step2.endDate;
         titleText = '📢 第 3 階段：通報主管機關系統期限';
-        ruleText = '受理後 7 個工作日';
+        ruleText = '受理翌日起 7 個工作日（翌日起算）';
         legalHtml = `
           <b>【法定依據與起算規定】</b><br>
-          自受理決定基準日（<b>${formatDateDisplay(ms.acceptBaseDate).roc}</b>）之次一工作日起算 <b>7 個工作日內</b>，應依規定登錄主管機關專屬通報系統進行列管通報。<br>
-          ${ms.hasActualAccepted ? '<b>本階段已精確以您鍵入之實際受理日起算！</b>' : '（目前以法定最晚受理審查期限為起算基準）'}
+          依《職場霸凌防治措施準則》第 11 條規定，雇主應於<b>受理翌日起 7 個工作日內（翌日起算）</b>登錄主管機關專屬通報系統進行列管通報。<br>
+          本階段依法採<b>翌日起算（始日不計入）</b>，自受理基準日（<b>${formatDateDisplay(ms.acceptBaseDate).roc}</b>）之次一工作日起算 7 個工作日。<br>
+          ${ms.hasActualAccepted ? '<b>本階段已精確以您鍵入之實際受理日翌日起算！</b>' : '（目前以法定最晚受理審查期限為起算基準）'}
         `;
         holidayNotices = ms.step2.breakdown.filter(b => !b.isWork && b.note && !b.note.includes('週六') && !b.note.includes('週日'));
         breakdownList = ms.step2.breakdown;
@@ -4342,12 +4376,13 @@
       } else if (milestoneKey === 'committee') {
         targetDate = ms.step3.endDate;
         titleText = '👥 第 4 階段：成立調查小組（指派調查人）期限';
-        ruleText = '受理後 15 個工作日';
+        ruleText = '受理申訴日起 15 個工作日（當日起算）';
         legalHtml = `
           <b>【法定依據與起算規定】</b><br>
-          自受理決定基準日（<b>${formatDateDisplay(ms.acceptBaseDate).roc}</b>）之次一工作日起算 <b>15 個工作日內</b>，應遴選具性平或霸凌調查專業之公正外部人士組成調查小組。<br>
-          ${ms.hasActualAccepted ? '<b>本階段已精確以您鍵入之實際受理日起算！</b>' : '（目前以法定最晚受理審查期限為起算基準）'}<br>
-          此日期亦為後續「2 個月完成調查報告」之起算點。
+          依《職場霸凌防治措施準則》第 14 條第 1 項規定，雇主應於<b>受理申訴日起 15 個工作日內（當日起算）</b>，遴選具性平或霸凌調查專業之公正外部人士組成調查小組。<br>
+          本階段依法採<b>當日起算（始日計入）</b>，自受理基準日（<b>${formatDateDisplay(ms.acceptBaseDate).roc}</b>）當天起算 15 個工作日（若受理日為非工作日則順延至首個工作日起算）。<br>
+          ${ms.hasActualAccepted ? '<b>本階段已精確以您鍵入之實際受理日當日起算！</b>' : '（目前以法定最晚受理審查期限為起算基準）'}<br>
+          調查小組成立翌日起，即為後續「2 個月完成調查報告」之起算點。
         `;
         holidayNotices = ms.step3.breakdown.filter(b => !b.isWork && b.note && !b.note.includes('週六') && !b.note.includes('週日'));
         breakdownList = ms.step3.breakdown;
@@ -4355,12 +4390,11 @@
       } else if (milestoneKey === 'report') {
         targetDate = ms.step4.effectiveDate;
         titleText = '📄 第 5 階段：完成調查報告（法定基本期限）';
-        ruleText = '成立後 2 個月（日曆天）';
+        ruleText = '成立翌日起 2 個月（日曆天，翌日起算）';
         legalHtml = `
           <b>【法定依據與起算規定】</b><br>
-          依規定調查小組應於成立之日（${formatDateDisplay(ms.step3.endDate).roc}）起 <b>2 個月內</b>完成調查報告。本期間按<b>日曆天</b>計算。<br>
-          <b>【民法順延規定】</b>依《民法》第 121 條第 2 項及第 122 條：「於一定期日或期間內，應為意思表示或給付者，其期日或其期間之末日，為星期日、紀念日或其他休息日時，以其休息日之次日代之。」<br>
-          若滿期日逢週休或國定假日，依法順延至次一工作日。
+          依《職場霸凌防治措施準則》第 17 條第 1 項規定，調查小組應於<b>調查小組成立翌日起 2 個月內（翌日起算）</b>完成調查報告。本期間按<b>日曆天</b>計算。<br>
+          <b>【民法計算與順延規定】</b>依《民法》第 120 條第 2 項及第 121 條規定，以成立日（${formatDateDisplay(ms.step3.endDate).roc}）之翌日起算至相當日之前一日為滿期日；若滿期日適逢星期日、例假日或國定休息日，依《民法》第 122 條順延至次一工作日。
         `;
         if (ms.step4.delayedReasons.length > 0) {
           holidayNotices = [{ note: `原滿期日 ${formatDateDisplay(ms.step4.nominalDate).rocShort} 適逢休假（${ms.step4.delayedReasons.map(r => r.note || '例假日').join('、')}），依民法第 122 條順延至次一工作日 ${formatDateDisplay(ms.step4.effectiveDate).rocShort}。` }];
@@ -4369,7 +4403,7 @@
       } else if (milestoneKey === 'extended') {
         targetDate = ms.step5.effectiveDate;
         titleText = '⏳ 第 6 階段：調查報告展延上限';
-        ruleText = '得展延 1 個月（累計 3 個月日曆天）';
+        ruleText = '成立翌日起累計 3 個月（得展延 1 個月）';
         legalHtml = `
           <b>【法定依據與起算規定】</b><br>
           調查期間必要時得延長 1 個月，並應以書面通知雙方當事人。累計調查期間不得逾 3 個月。<br>
